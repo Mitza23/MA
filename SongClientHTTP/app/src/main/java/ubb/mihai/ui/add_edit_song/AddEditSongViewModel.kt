@@ -19,8 +19,9 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditSongViewModel @Inject constructor(
     private val repository: SongRepository,
+    private val service: SongService,
     savedStateHandle: SavedStateHandle
-): ViewModel() {
+) : ViewModel() {
 
     var song by mutableStateOf<Song?>(null)
         private set
@@ -43,9 +44,13 @@ class AddEditSongViewModel @Inject constructor(
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    var forUpdate: Boolean = false
+
     init {
         val songId = savedStateHandle.get<Int>("songId")
-        if(songId != -1) {
+        forUpdate = false
+        if (songId != -1) {
+            forUpdate = true
             viewModelScope.launch {
                 repository.getByLocalId(songId!!)?.let { song ->
                     title = song.title
@@ -60,7 +65,7 @@ class AddEditSongViewModel @Inject constructor(
     }
 
     fun onEvent(event: AddEditSongEvent) {
-        when(event) {
+        when (event) {
             is AddEditSongEvent.OnTitleChange -> {
                 title = event.title
             }
@@ -78,23 +83,28 @@ class AddEditSongViewModel @Inject constructor(
             }
             is AddEditSongEvent.OnSaveSongClick -> {
                 viewModelScope.launch {
-                    if(title.isBlank() && artist.isBlank() && genre.isBlank() && year <= 0) {
-                        sendUiEvent(UiEvent.ShowSnackbar(
-                            message = "Fields can't be empty"
-                        ))
+                    if (title.isBlank() && artist.isBlank() && genre.isBlank() && year <= 0) {
+                        sendUiEvent(
+                            UiEvent.ShowSnackbar(
+                                message = "Fields can't be empty"
+                            )
+                        )
                         return@launch
                     }
-                    repository.insert(
-                        Song(
-                            title = title,
-                            artist = artist,
-                            genre = genre,
-                            year = year,
-                            link = link,
-                            localId = song?.localId,
-                            remoteId = song?.remoteId
-                        )
+                    var _song = Song(
+                        title = title,
+                        artist = artist,
+                        genre = genre,
+                        year = year,
+                        link = link,
+                        localId = song?.localId,
+                        remoteId = song?.remoteId
                     )
+                    if (forUpdate) {
+                        service.update(_song)
+                    } else {
+                        service.insert(_song)
+                    }
                     sendUiEvent(UiEvent.PopBackStack)
                 }
             }

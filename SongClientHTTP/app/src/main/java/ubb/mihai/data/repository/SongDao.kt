@@ -26,5 +26,5 @@ interface SongDao {
     fun getAll(): Flow<List<Song>>
 
     @Query("SELECT * FROM song")
-    fun getAllList(): List<Song>
+    suspend fun getAllList(): List<Song>
 }

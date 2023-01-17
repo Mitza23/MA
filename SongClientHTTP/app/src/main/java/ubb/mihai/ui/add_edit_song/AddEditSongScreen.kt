@@ -88,18 +88,6 @@ fun AddEditSongScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
-                value = viewModel.genre,
-                onValueChange = {
-                    viewModel.onEvent(AddEditSongEvent.OnGenreChange(it))
-                },
-                placeholder = {
-                    Text(text = "Genre")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextField(
                 value = viewModel.year.toString(),
                 onValueChange = {
                     viewModel.onEvent(AddEditSongEvent.OnYearChange(Integer.parseInt(it)))

@@ -6,7 +6,10 @@ import ubb.mihai.util.Routes
 import ubb.mihai.util.UiEvent
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ubb.mihai.data.model.Song
@@ -17,10 +20,22 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SongListViewModel @Inject constructor(
-    private val repository: SongRepository
+    private val repository: SongRepository,
+    private val service: SongService
 ) : ViewModel() {
 
-    val songs = repository.getAll()
+    init {
+       fetch()
+    }
+
+    var songs = flowOf(emptyList<Song>())
+
+    fun fetch() {
+        CoroutineScope(Dispatchers.Default).launch {
+            songs = service.getAll()
+//            println("Got: ${songs.collect()}")
+        }
+    }
 
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
@@ -38,13 +53,13 @@ class SongListViewModel @Inject constructor(
             is SongListEvent.OnUndoDeleteClick -> {
                 deletedSong?.let { song ->
                     viewModelScope.launch {
-                        repository.insert(song)
+                        service.insert(song)
                     }
                 }
             }
             is SongListEvent.OnDeleteSongClick -> {
                 viewModelScope.launch {
-                    repository.delete(event.song)
+                    service.delete(event.song)
                     deletedSong = event.song
                     sendUiEvent(UiEvent.ShowSnackbar(
                         message = "Song deleted",
@@ -54,7 +69,7 @@ class SongListViewModel @Inject constructor(
             }
             is SongListEvent.OnDoneChange -> {
                 viewModelScope.launch {
-                    repository.insert(event.song.copy())
+//                    repository.insert(event.song.copy())
                 }
             }
         }

@@ -5,7 +5,7 @@ import ubb.mihai.data.model.Song
 
 @kotlinx.serialization.Serializable
 data class SongDTO (
-    val id: Int,
+    val id: Int?,
     val title: String,
     val artist: String,
     val genre: String,

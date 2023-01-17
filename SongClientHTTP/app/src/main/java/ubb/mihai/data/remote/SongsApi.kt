@@ -6,14 +6,14 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface SongsApi {
-    @GET
+    @GET("/songs")
     suspend fun getAll() : Response<List<SongDTO>>
 
     @POST("/songs")
-    suspend fun addSong(@Body song: Song) : Response<Int>
+    suspend fun addSong(@Body song: SongDTO) : Response<Int>
 
     @PUT("/songs")
-    suspend fun updateSong(@Body song: Song) : Response<Boolean>
+    suspend fun updateSong(@Body song: SongDTO) : Response<Boolean>
 
     @DELETE("/songs/{id}")
     suspend fun deleteSong(@Path("id") id: Int) : Response<Boolean>
